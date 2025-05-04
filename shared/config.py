@@ -1,5 +1,6 @@
 
 NODES = {
+    "A": "localhost:50050",
     "B": "localhost:50051",
     "C": "localhost:50052",
     "D": "localhost:50053",

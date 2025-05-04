@@ -51,23 +51,18 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
             print(f"[{NODE_ID}] Node {node_id} -> Rank Score: {score:.2f} | Metrics: {m}")
             ranked.append((score, node_id))
         ranked.sort()
-
+        selected_nodes = [node_id for _, node_id in ranked[:config.W]]
+        print(f"[{NODE_ID}] Selected nodes for replication: {selected_nodes}")
         success_count = 0
-        selected_nodes = []
-        for _, node_id in ranked:
-            if success_count >= config.W:
-                break
+        for node_id in selected_nodes:
             try:
                 stub = get_stub(node_id)
                 response = stub.SendWrite(request)
                 if response.success:
                     success_count += 1
-                    selected_nodes.append(node_id)
                     PENDING_REPLICATIONS[node_id] = PENDING_REPLICATIONS.get(node_id, 0) + 1
             except grpc.RpcError as e:
                 print(f"[{NODE_ID}] Error sending to {node_id}: {e}")
-
-        print(f"[{NODE_ID}] Final selected nodes for replication: {selected_nodes}")
         ack = replication_pb2.WriteAck(success=(success_count == config.W), node_id=NODE_ID)
         return ack
 
@@ -78,9 +73,7 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
             "pending_replications": request.pending_replications,
             "steal_delay": request.steal_delay
         }
-        # print(f"[{NODE_ID}] Received heartbeat from {request.node_id}: "
-        #       f"q={request.queue_len}, cpu={request.cpu_util:.2f}, "
-        #       f"pending={request.pending_replications}, steal_delay={request.steal_delay}")
+        # print(f"[{NODE_ID}] Received heartbeat from {request.node_id}: "f"q={request.queue_len}, cpu={request.cpu_util:.2f}, "f"pending={request.pending_replications}, steal_delay={request.steal_delay}")
         return replication_pb2.WriteAck(success=True, node_id=NODE_ID)
 
 def serve():
