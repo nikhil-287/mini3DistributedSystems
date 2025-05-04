@@ -1,0 +1,35 @@
+  syntax = "proto3";
+
+  package replication;
+
+  message WriteRequest {
+    string data = 1;
+    string timestamp = 2;
+  }
+
+  message WriteAck {
+    bool success = 1;
+    string node_id = 2;
+  }
+
+  message MetricsReport {
+    string node_id = 1;
+    int32 queue_len = 2;
+    float cpu_util = 3;
+    int32 pending_replications = 4;
+    int64 steal_delay = 5;
+  }
+
+  message StealRequest {
+    string requester_id = 1;
+  }
+
+  message StealResponse {
+    repeated WriteRequest stolen_tasks = 1;
+  }
+
+  service Replication {
+    rpc SendWrite(WriteRequest) returns (WriteAck);
+    rpc ReportMetrics(MetricsReport) returns (WriteAck);
+    rpc RequestSteal(StealRequest) returns (StealResponse);
+  }
