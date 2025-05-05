@@ -26,18 +26,18 @@ class ReplicationServicer(replication_pb2_grpc.ReplicationServicer):
     def SendWrite(self, request, context):
         with lock:
             task_queue.append(request)
-        print(f"[{NODE_ID}] Received write: {{request.data}}")
+        print(f"[{NODE_ID}] Received write: {request.data}")
         return replication_pb2.WriteAck(success=True, node_id=NODE_ID)
 
     def RequestSteal(self, request, context):
-        print(f"[{NODE_ID}] Received steal request from {{request.requester_id}}")
+        print(f"[{NODE_ID}] Received steal request from {request.requester_id}")
         stolen_tasks = []
 
         with lock:
             while len(stolen_tasks) < 2 and task_queue:
                 stolen_tasks.append(task_queue.popleft())
 
-        print(f"[{NODE_ID}] Sent {{len(stolen_tasks)}} stolen tasks")
+        print(f"[{NODE_ID}] Sent {len(stolen_tasks)} stolen tasks")
         return replication_pb2.StealResponse(stolen_tasks=stolen_tasks)
 
     def ReportMetrics(self, request, context):
@@ -50,7 +50,7 @@ def process_queue():
         with lock:
             if task_queue:
                 task = task_queue.popleft()
-                print(f"[{NODE_ID}] Processed task: {{task.data}}")
+                print(f"[{NODE_ID}] Processed task: {task.data}")
                 save_result(task)
 
 def save_result(task):
@@ -78,7 +78,7 @@ def send_heartbeat():
             )
             stub.ReportMetrics(heartbeat)
         except Exception as e:
-            print(f"[{NODE_ID}] Failed to send heartbeat: {{e}}")
+            print(f"[{NODE_ID}] Failed to send heartbeat: {e}")
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

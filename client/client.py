@@ -6,7 +6,7 @@ import csv
 from datetime import datetime
 
 
-NUM_REQUESTS = 5
+NUM_REQUESTS = 100
 NODE_A_ADDRESS = "localhost:50050"
 
 def main():
